@@ -1,6 +1,6 @@
-import math
 import numpy as np
 
+# Calculate x-component of DC Electric Field at every point in PPA
 def E_x(a, b, r, ang_vel, B_0, X, Y):
 
     term_1 = -(b + 2*r)*np.atan((a - Y)/(b - X))
@@ -17,6 +17,7 @@ def E_x(a, b, r, ang_vel, B_0, X, Y):
 
     return final_sum
 
+# Calculate y-component of DC Electric Field at every point in PPA
 def E_y(a, b, r, ang_vel, B_0, X, Y):
 
     term_1 = (2*a)*np.atan((b - X)/(a - Y))
@@ -38,6 +39,7 @@ def E_y(a, b, r, ang_vel, B_0, X, Y):
 
     return final_sum
 
+# Calculate velocity at every given point in PPA
 def velocity_field(a, b, r, ang_vel, X, Y):
     
     x_comp = -ang_vel*(Y - b/2)
@@ -46,8 +48,9 @@ def velocity_field(a, b, r, ang_vel, X, Y):
 
     v = np.stack((x_comp, y_comp, z_comp), axis=-1)
 
-    return v
+    return v # Shape (200, 200, 3)
 
+# Calculate magnetic field at every given point in PPA
 def magnetic_field(X, B_0, omega, t):
 
     x_comp = np.zeros_like(X)
@@ -56,8 +59,9 @@ def magnetic_field(X, B_0, omega, t):
 
     B = np.stack((x_comp, y_comp, z_comp), axis=-1)
 
-    return B
+    return B # Shape (200, 200, 3)
 
+# Calculate electric field at every given point in PPA
 def electric_field(Ex, Ey, omega, t):
 
     x_comp = Ex*np.cos(omega*t)
@@ -66,14 +70,17 @@ def electric_field(Ex, Ey, omega, t):
 
     E = np.stack((x_comp, y_comp, z_comp), axis=-1)
 
-    return E
+    return E # Shape (200, 200, 3)
 
+# Calculate current density field at every given point in PPA
 def current_density_field(E, v, B, sigma, d):
 
     J = sigma*d*(E + np.cross(v, B, axis=-1))
 
     return J
 
+# Define position field for torque lever arm relative to disk center
+# This formula translates the disk center to the previously defined PPA Origin
 def position_field(X, Y, a, b, r):
 
     x_comp = X + r - a/2
@@ -84,43 +91,14 @@ def position_field(X, Y, a, b, r):
 
     return R
 
+# Calculate "torque density" at every point in PPA
+# Intended for surface integration
 def torque_density(R, J, B):
     
     f = np.cross(J, B, axis=-1)
     tau_density = np.cross(R, f, axis=-1)
 
     return tau_density
-
-
-# A_net Method
-def wavenumber(mu, sigma, d, omega, t):
-
-    lambda_ = -mu*sigma*d*omega*(math.cot(omega*t))
-
-    return lambda_
-
-def greens_function(a, b, X, Y, zeta, eta, lambda_):
-
-    n, m = 1
-    sum = 0
-
-    for m in range(40):
-        for n in range(40):
-            p_n = (math.pi*n)/b
-            q_m = (math.pi*m)/a
-
-            numerator = math.sin(p_n*X) * math.sin(q_m*Y) * math.sin(p_n*zeta) * math.sin(q_m*eta)
-            denominator = p_n**2 + q_m**2 - lambda_
-            sum += numerator/denominator
-
-    sum = sum / (a*b)
-
-def image_positions(a, b, r, X, Y):
-    x_i = (a/2 - r)
-
-def phi_field(mu, J):
-    
-    return mu*J
 
 
 
